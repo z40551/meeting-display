@@ -1,103 +1,63 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
 <title>Meeting Display</title>
-
+<script src="https://cdn.tailwindcss.com"></script>
 <style>
-body {
-  margin: 0;
-  background: black;
-  color: white;
-  font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-  height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-#container {
-  width: 92%;
-}
-
-.meeting {
-  display: flex;
-  align-items: center;
-  margin: 45px 0;
-}
-
-.dot {
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  background: #3aa0ff;
-  margin-right: 30px;
-  flex-shrink: 0;
-}
-
-.time {
-  font-size: 48px;
-  width: 420px;
-  flex-shrink: 0;
-}
-
-.title {
-  font-size: 54px;
-  font-weight: 500;
-}
-
-.empty {
-  font-size: 80px;
-  opacity: 0.5;
-}
+  body {
+    background: linear-gradient(135deg, #0f172a, #1e293b);
+  }
 </style>
 </head>
+<body class="text-white min-h-screen flex flex-col items-center p-10">
 
-<body>
-<div id="container"></div>
+<h1 class="text-5xl font-bold mb-10">📅 Today’s Meetings</h1>
+
+<div id="meetingList" class="w-full max-w-4xl space-y-6"></div>
 
 <script>
-function formatTimeRange(start, end) {
-  const options = { hour: 'numeric', minute: '2-digit', hour12: true };
-
-  const startStr = start.toLocaleTimeString("en-SG", options);
-  const endStr = end.toLocaleTimeString("en-SG", options);
-
-  return `${startStr} - ${endStr}`;
-}
-
-async function load() {
-  const res = await fetch("/api/events");
+async function loadMeetings() {
+  const res = await fetch("/api/calendar"); // 你的JSON接口路径
   const data = await res.json();
 
-  const container = document.getElementById("container");
-  container.innerHTML = "";
+  const list = document.getElementById("meetingList");
+  list.innerHTML = "";
 
-  if (!data.length) {
-    container.innerHTML = "<div class='empty'>No upcoming meetings</div>";
+  const today = new Date().toISOString().split("T")[0];
+
+  const todayMeetings = data.filter(m => m.start.startsWith(today));
+
+  todayMeetings.sort((a, b) => new Date(a.start) - new Date(b.start));
+
+  if (todayMeetings.length === 0) {
+    list.innerHTML = "<div class='text-3xl opacity-60'>No meetings today 🎉</div>";
     return;
   }
 
-  data.slice(0,4).forEach(event => {
+  todayMeetings.forEach(m => {
+    const start = new Date(m.start);
+    const end = new Date(m.end);
 
-    const start = new Date(event.start);
-    const end = new Date(event.end);
+    const timeStr =
+      start.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) +
+      " - " +
+      end.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
 
     const div = document.createElement("div");
-    div.className = "meeting";
+    div.className = "bg-slate-800 rounded-2xl p-6 shadow-xl";
 
     div.innerHTML = `
-      <div class="dot"></div>
-      <div class="time">${formatTimeRange(start, end)}</div>
-      <div class="title">${event.title}</div>
+      <div class="text-2xl font-semibold">${m.title}</div>
+      <div class="text-lg text-slate-400 mt-2">${timeStr}</div>
     `;
 
-    container.appendChild(div);
+    list.appendChild(div);
   });
 }
 
-load();
-setInterval(load, 60000);
+loadMeetings();
+setInterval(loadMeetings, 300000); // 每5分钟刷新
 </script>
 
 </body>
