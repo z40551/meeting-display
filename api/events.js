@@ -1,5 +1,5 @@
 export default async function handler(req, res) {
-  const icsUrl = "https://calendar.google.com/calendar/ical/kevin.zou%40longportwhale.com/public/basic.ics";
+  const icsUrl = "https://calendar.google.com/calendar/ical/c_26f52e5b01c11dd955d6551e2a8358a79628465beb69acfc01c7f7be56e003ef%40group.calendar.google.com/public/basic.ics";
 
   try {
     const response = await fetch(icsUrl);
