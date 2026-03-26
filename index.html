@@ -2,29 +2,50 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Meeting Display</title>
+<title>Meeting Board</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
   body {
-    background: linear-gradient(135deg, #0f172a, #1e293b);
+    background: linear-gradient(135deg, #0f172a, #111827);
   }
 </style>
 </head>
+
 <body class="text-white min-h-screen flex flex-col items-center p-10">
 
-<h1 class="text-5xl font-bold mb-10">📅 Today’s Meetings</h1>
+<!-- 标题 -->
+<h1 class="text-6xl font-extrabold tracking-widest mb-2">
+  MEETING BOARD
+</h1>
 
-<div id="meetingList" class="w-full max-w-4xl space-y-6"></div>
+<!-- 日期时间 -->
+<div id="datetime" class="text-2xl text-slate-400 mb-10"></div>
+
+<!-- 会议列表 -->
+<div id="meetingList" class="w-full max-w-5xl space-y-6"></div>
 
 <script>
+function updateClock() {
+  const now = new Date();
+  const dateStr = now.toLocaleDateString(undefined, {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+  const timeStr = now.toLocaleTimeString();
+  document.getElementById("datetime").innerText = dateStr + " | " + timeStr;
+}
+
 async function loadMeetings() {
-  const res = await fetch("/api/calendar"); // 你的JSON接口路径
+  const res = await fetch("/api/calendar");
   const data = await res.json();
 
   const list = document.getElementById("meetingList");
   list.innerHTML = "";
 
-  const today = new Date().toISOString().split("T")[0];
+  const now = new Date();
+  const today = now.toISOString().split("T")[0];
 
   const todayMeetings = data.filter(m => m.start.startsWith(today));
 
@@ -45,19 +66,35 @@ async function loadMeetings() {
       end.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
 
     const div = document.createElement("div");
-    div.className = "bg-slate-800 rounded-2xl p-6 shadow-xl";
+
+    let style = "bg-slate-800";
+
+    // 会议进行中
+    if (now >= start && now <= end) {
+      style = "bg-green-600";
+    }
+
+    // 5分钟内开始
+    if (start - now <= 5 * 60 * 1000 && start > now) {
+      style = "bg-orange-500";
+    }
+
+    div.className = style + " rounded-2xl p-8 shadow-2xl transition-all duration-500";
 
     div.innerHTML = `
-      <div class="text-2xl font-semibold">${m.title}</div>
-      <div class="text-lg text-slate-400 mt-2">${timeStr}</div>
+      <div class="text-3xl font-semibold">${m.title}</div>
+      <div class="text-xl text-slate-200 mt-3">${timeStr}</div>
     `;
 
     list.appendChild(div);
   });
 }
 
+updateClock();
 loadMeetings();
-setInterval(loadMeetings, 300000); // 每5分钟刷新
+
+setInterval(updateClock, 1000);     // 时间每秒刷新
+setInterval(loadMeetings, 300000);  // 每5分钟刷新会议
 </script>
 
 </body>
