@@ -38,7 +38,7 @@ function updateClock() {
 }
 
 async function loadMeetings() {
-  const res = await fetch("/api/calendar");
+  const res = await fetch("/api/events");
   const data = await res.json();
 
   const list = document.getElementById("meetingList");
