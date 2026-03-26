@@ -21,26 +21,9 @@ body {
 }
 
 .meeting {
-  margin: 60px 0;
-}
-
-.time {
-  font-size: 90px;
-  font-weight: 600;
-}
-
-.title {
-  font-size: 48px;
-  opacity: 0.7;
-}
-
-.now {
-  color: #00ff88;
-}
-
-.empty {
   font-size: 80px;
-  opacity: 0.5;
+  margin: 70px 0;
+  font-weight: 600;
 }
 </style>
 </head>
@@ -57,17 +40,14 @@ async function load() {
   container.innerHTML = "";
 
   if (!data.length) {
-    container.innerHTML = "<div class='empty'>No upcoming meetings</div>";
+    container.innerHTML = "<div class='meeting'>No upcoming meetings</div>";
     return;
   }
 
-  const now = new Date();
+  // 只取最近4个
+  data.slice(0,4).forEach(event => {
 
-  data.forEach(event => {
     const start = new Date(event.start);
-    const end = new Date(event.end);
-
-    const isNow = now >= start && now <= end;
 
     const time = start.toLocaleTimeString("en-SG", {
       hour: '2-digit',
@@ -76,13 +56,7 @@ async function load() {
 
     const div = document.createElement("div");
     div.className = "meeting";
-
-    div.innerHTML = `
-      <div class="time ${isNow ? "now" : ""}">
-        ${time} ${isNow ? "• NOW" : ""}
-      </div>
-      <div class="title">${event.title}</div>
-    `;
+    div.textContent = `${time}：${event.title}`;
 
     container.appendChild(div);
   });
