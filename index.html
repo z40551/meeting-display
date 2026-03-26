@@ -10,20 +10,45 @@ body {
   background: black;
   color: white;
   font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+  height: 100vh;
   display: flex;
   align-items: center;
   justify-content: center;
-  height: 100vh;
 }
 
 #container {
-  width: 90%;
+  width: 92%;
 }
 
 .meeting {
+  display: flex;
+  align-items: center;
+  margin: 45px 0;
+}
+
+.dot {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #3aa0ff;
+  margin-right: 30px;
+  flex-shrink: 0;
+}
+
+.time {
+  font-size: 48px;
+  width: 420px;
+  flex-shrink: 0;
+}
+
+.title {
+  font-size: 54px;
+  font-weight: 500;
+}
+
+.empty {
   font-size: 80px;
-  margin: 70px 0;
-  font-weight: 600;
+  opacity: 0.5;
 }
 </style>
 </head>
@@ -32,6 +57,15 @@ body {
 <div id="container"></div>
 
 <script>
+function formatTimeRange(start, end) {
+  const options = { hour: 'numeric', minute: '2-digit', hour12: true };
+
+  const startStr = start.toLocaleTimeString("en-SG", options);
+  const endStr = end.toLocaleTimeString("en-SG", options);
+
+  return `${startStr} - ${endStr}`;
+}
+
 async function load() {
   const res = await fetch("/api/events");
   const data = await res.json();
@@ -40,28 +74,27 @@ async function load() {
   container.innerHTML = "";
 
   if (!data.length) {
-    container.innerHTML = "<div class='meeting'>No upcoming meetings</div>";
+    container.innerHTML = "<div class='empty'>No upcoming meetings</div>";
     return;
   }
 
-  // 只取最近4个
   data.slice(0,4).forEach(event => {
 
     const start = new Date(event.start);
-
-    const time = start.toLocaleTimeString("en-SG", {
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    const end = new Date(event.end);
 
     const div = document.createElement("div");
     div.className = "meeting";
-    div.textContent = `${time}：${event.title}`;
+
+    div.innerHTML = `
+      <div class="dot"></div>
+      <div class="time">${formatTimeRange(start, end)}</div>
+      <div class="title">${event.title}</div>
+    `;
 
     container.appendChild(div);
   });
 }
-
 
 load();
 setInterval(load, 60000);
